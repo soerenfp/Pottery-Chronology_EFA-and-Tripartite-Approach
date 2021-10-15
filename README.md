@@ -2,7 +2,7 @@
 
 West African Pottery Chronology - PhD, Frobenius Institute
 
-15.10.2021
+15.10.2021 (Initital commit)
 
 This repo provides the work-flow and R codes for Elliptical Fourier Analysis (EFA) and The Tripartite Approach for Bayesian Divergence Time Estimation (Warnock et al. 2020)
 

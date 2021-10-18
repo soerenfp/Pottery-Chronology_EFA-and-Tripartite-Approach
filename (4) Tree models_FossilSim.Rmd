@@ -1,0 +1,57 @@
+---
+title: "(4) Tree models_FossilSim"
+author: "Soren Pedersen"
+date: "18/10/2021"
+output: html_document
+---
+
+This is the description and code for FossilSim (Barido-Sottani 2018), with provided work-flow from the article.
+
+"We present an r package FossilSim that can be used to simulate and visualise fossil data for phylogenetic analysis under a range of flexible models. The package includes interval-, environment- and lineage-dependent models of fossil recovery that can be combined with models of stratigraphic age uncertainty and species evolution."
+
+(1) Install and run FossilSim
+```{r, echo=TRUE}
+install.packages("FossilSim")
+library(FossilSim)
+```
+
+FossilSim can be used to model the speciation process along a tree and incorporates three possible modes of speciation shown in Figure 1: budding, bifurcation and anagenesis. 
+
+•	A budding or asymmetric speciation event gives rise to one new species and does   not result in the extinction of the ancestor. 
+•	A bifurcation or symmetric speciation event gives rise to two new species and     results in the extinction of the ancestor. At each branching event in a           phylogenetic tree, bifurcation speciation occurs with probability β. If β = 0     all speciation occurs via budding and if β = 1 all speciation occurs via          bifurcation. 
+•	Anagenetic speciation occurs along each branch in a phylogenetic tree with rate   lambda^a.
+
+(2.1) Example 1: simulating taxonomy under mixed speciation
+(Figure 3a) shows a complete tree with its full taxonomy record: each colour represents a different species and speciation events are labelled by type.
+```{r, echo=TRUE}
+t = TreeSim::sim.bd.taxa(n = 8, numbsim = 1, lambda = 1, mu = 0.3)[[1]]
+s = sim.taxonomy(tree = t, beta = 0.5, lambda.a = 1)
+plot.taxonomy(s, tree = t)
+```
+
+(2.2) Example 2: simulating fossils under mixed speciation and constant fossil recovery
+(Figure 3b) shows a complete tree with fossil occurrences where the fossils and stratigraphic ranges are colour-coded by the species to which they belong.
+```{r, echo=TRUE}
+t = TreeSim::sim.bd.taxa(n = 8, numbsim = 1, lambda = 1, mu = 0.3)[[1]]
+s = sim.taxonomy(tree = t, beta = 0.5, lambda.a = 1)
+f = sim.fossils.poisson(rate = 3, taxonomy = S)
+plot.fossils(f, tree =t, taxonomy = s, show.taxonomy = TRUE, show.ranges = TRUE)
+```
+
+(2.3) Example 3: lineage-dependent fossil recovery
+(Figure 3c) shows a complete tree with fossil occurrences simulated under lineage-dependent fossil recovery. The function sim.trait.values is used to simulate fossil recovery rates under the independent trait values model.
+```{r, echo=TRUE}
+t = TreeSim::sim.bd.taxa(n = 8, numbsim = 1, lambda = 1, mu = 0.3)[[1]]
+dist = function(){ rexp(1, 1/4) }
+rates = sim.trait.values(init = 1, tree = t, model = "independent", dist = dist, 
+                         change.pr = 0.5)
+f = sim.fossils.poisson(t, rate = rates)
+```
+
+(2.4) Example 4: plotting non-bifurcating trees
+(Figure 3d) shows a non-bifurcating representation for asymmetric speciation events.
+```{r, echo=TRUE}
+t = sim.fbd.taxa(n = 10, numbsim = 1, lambda = 3, mu = 2, psi = 1, 
+                 complete = TRUE)[[1]]
+rangeplot.asymmetric(t, complete = TRUE)
+```

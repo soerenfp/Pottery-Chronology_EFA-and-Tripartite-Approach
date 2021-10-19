@@ -1,16 +1,50 @@
 ---
-title: "DiaOutline and EFA statistical analysis"
+title: "DiaOutline and Elliptical Fourier Analysis (EFA)"
 author: "Soren Pedersen"
 date: "18/10/2021"
 output: html_document
 ---
+--------------------
+####INTRODUCTION####
+--------------------
 
-(1.1) First install DiaOutline from https://github.com/wishkerman/DiaOutline where the three files (DiaOutline.exe / DiaOutline101.7z.001 / DiaOutline101.7z.002) are downloaded. Download the .exe file last and make sure that the .001 and .002 files are run using the .exe file as operator. Read the readme file.
+# This document is based on the method and work-flow from:
 
-(1.2) Install MATLAB Runtime (R2017b) from http://www.mathworks.com/products/compiler/mcr/index.html and install the necessary updates. Make a profile on the site. Run as admin. 
+Wishkerman, A., and P. B. Hamilton. 2018. Shape outline extraction software       (DiaOutline) for elliptic Fourier analysis application in morphometric          studies. Applications in Plant Sciences 6(12): e1204.
+  https://doi:10.1002/aps3.1204
 
-(1.3) Install these packages for statistical analysis (Wishkerman et al 2018)
+# DiaOutline and example code presented here is available at:
 
+https://github.com/wishkerman/DiaOutline
+
+# Supplementary litterature 
+
+Caple, J., J. Byrd, C. N. Stephan. 2017. Elliptical Fourier analysis:             fundamentals, applications, and value for forensic anthropology. Int J Legal    Med (2017) 131: 1675–1690. https://doi:10.1007/s00414-017-1555-0 
+
+Wang, Li-Ying, and Ben Marwik. 2020. Standardization of ceramic shape: A case     study of Iron Age pottery from northeastern Taiwan. Journal of Archaeological   Science: Reports. Vol. 33. https://doi.org/10.1016/j.jasrep.2020.102554
+
+
+---------------------------
+####METHOD AND ANALYSIS####
+---------------------------
+
+####Introduction to EFA####
+
+"EFA uses periodic functions to capture geometric information, where an outline is decomposed into a series of ellipses described by trigonometric functions (Adams et al., 2004; Bonhomme et al., 2014; Claude, 2008). That is, coordinates along a curve are converted into Fourier function coefficients, called harmonic coefficients or harmonics (Kuhl and Giardina, 1982). The number of harmonics determines the quality and precision of the geometric representation of an object. The harmonic power, a cumulative sum of squared harmonic coefficients, provides a robust rule for determining the desired number of harmonics (Bonhomme et al., 2014)."(Wang & Marwik 2020)
+
+"Geometric morphometrics (GMM) differs from traditional linear measurements through its use of Cartesian coordinates of morphological structures to quantify and analyze shape (Adams et al., 2004; Bookstein, 1997; Lawing and Polly, 2010; Slice, 2007). Landmarks, curves or outlines of objects can be represented by coordinates in terms of their unique point locations with respect to numerical values on coordinate axes." (Wang & Marwik 2020)
+
+"There are two common morphometric approaches: landmark and outline methods (Adams et al., 2004). Landmark GMM approaches assign a set of landmarks and/or semilandmarks onto objects as reference points. Generalized Procrustes analysis (GPA) is used to superimpose landmark data on a common coordinate system by translating, rotating, and scaling (Bookstein, 1991). After the GPA procedure, superimposed landmark coordinates become shape variables that allow further statistical analyses (Slice, 2007)(...)." (NOTE: continue section (2.2.2) PCA) (Wang & Marwik 2020)
+
+####(1) Install DiaOutline (Wishkerman & Hamilton 2018)####
+
+(1.1) Install DiaOutline from https://github.com/wishkerman/DiaOutline where the three files (DiaOutline.exe / DiaOutline101.7z.001 / DiaOutline101.7z.002) are downloaded. Download the .exe file last and make sure that the .001 and .002 files are run using the .exe file as operator. Read the readme.md file.
+
+(1.2) Install MATLAB Runtime (R2017b) from http://www.mathworks.com/products/compiler/mcr/index.html. Make a profile on the site, and install necessary updates. Run as admin. 
+
+####(2) Statistical analysis (Wishkerman & Hamilton 2018)####
+
+(2.1.1) Install these packages for statistical analysis
 ```{r, echo=TRUE}
 install.packages("MASS")
 install.packages("ggplot2")
@@ -22,7 +56,7 @@ install.packages("grid")
 install.packages("gridExtra")
 install.packages("Momocs")
 ```
-(1.4) and load
+(2.1.2) ...and load
 ```{r, echo=TRUE}
 library(MASS)
 library(ggplot2)
@@ -35,3 +69,280 @@ library(gridExtra)
 library(Momocs)
 ```
 
+"Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
+
+####(2.2.1) OUTLINE ANALYSIS - Species data
+```{r, echo=TRUE}
+lf <- list.files("E:/DiaOutlineDataset/", pattern = "\\.txt$",full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+lf2<-data.frame(substr(lf1$V2, 1, 5))
+names(lf2)[1] <- "Type"
+
+coordinates <- import_txt(lf) 
+allDiatomOutlines<-Out(coordinates, fac = lf2)
+
+panel(allDiatomOutlines, fac="Type", names=TRUE)
+
+# stack(allDiatomOutlines)
+stack(coo_center(allDiatomOutlines))
+# calibrate_harmonicpower(allDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
+allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+
+(2.2.2) PCA: Principal Component Analysis
+
+"Both PCA and LDA are linear transformation techniques, and whereas LDA is supervised, PCA is unsupervised." (Wishkerman & Hamilton 2018)
+
+"(...) A common procedure is using dimensional reduction techniques, such as Principal Components Analysis or Canonical Variate Analysis, to capture the key features that represent the overall shape. Visualization of the reduced data enables the identification of groups, followed by statistical tests to robustly distinguish them." (Wang & Marwik 2020)
+
+```{r, echo=TRUE}
+allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
+
+tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(allDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="All data PCA") #Supplement 10 in the paper.
+dev.off()
+
+plot(allDiatomOutlines.p,"Type", title="All data PCA")
+plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
+```
+
+(2.2.3) LDA: Linear Discriminant Analysis
+
+"Both PCA and LDA are linear transformation techniques, and whereas LDA is supervised, PCA is unsupervised." (Wishkerman & Hamilton 2018)
+
+```{r, echo=TRUE}
+allDiatomOutlines.l <- LDA(allDiatomOutlines.p,1)
+
+tiff("E:/Fig8AllLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(allDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="All data LDA") #Fig 8 in the paper.
+dev.off()
+
+plot(allDiatomOutlines.l, title="All data LDA") #Another plot version
+plot(allDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
+```
+
+(2.2.3) MANOVA
+
+"MANOVA analysis of shapes was also used to evaluate the significance of the determined shape groups." (Wishkerman & Hamilton 2018)
+
+"The principal component (PC) scores were analyzed with a multivariate analysis of variance (MANOVA) to test significant differences in shapes between occupation phases." (Wang & Marwik 2020)
+
+```{r, echo=TRUE}
+m<-MANOVA(allDiatomOutlines.p, 'Type')
+mpw<-MANOVA_PW(allDiatomOutlines.p, "Type")
+
+sink("E:/Manova.txt")
+lapply(mpw, print)
+sink()
+```
+
+####(2.3.1) OUTLINE ANALYSIS - Genera data
+```{r, echo=TRUE}
+lf <- list.files("E:/DiaOutlineDataset/", pattern = "\\.txt$",full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+lf2<-data.frame(substr(lf1$V2, 1, 2))
+names(lf2)[1] <- "Type"
+
+coordinates <- import_txt(lf) 
+allDiatomOutlines<-Out(coordinates, fac = lf2)
+
+allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+
+(2.3.2) PCA: Principal Component Analysis
+```{r, echo=TRUE}
+allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
+
+tiff("E:/Supplement_9GeneraPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(allDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="All data Genera PCA") #Supplement 9 in the paper.
+dev.off()
+
+plot(allDiatomOutlines.p,"Type", title="All data Genera PCA")
+plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
+```
+
+(2.3.3) Linear Discriminant Analysis
+```{r, echo=TRUE}
+allDiatomOutlines.l <- LDA(allDiatomOutlines.p,1)
+
+tiff("E:/Fig3Genera.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(allDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="Genera LDA") #Fig 3 in the paper.
+dev.off()
+
+plot(allDiatomOutlines.l, title="All data Genera LDA") #Another plot version
+plot(allDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
+```
+
+(2.3.4) MANOVA
+```{r, echo=TRUE}
+m<-MANOVA(allDiatomOutlines.p, 'Type')
+mpw<-MANOVA_PW(allDiatomOutlines.p, "Type")
+
+sink("E:/GeneraManova.txt")
+lapply(mpw, print)
+sink()
+```
+
+####(2.4.1) OUTLINE ANALYSIS - Cymbella ONLY (NOTE: wuut?)
+```{r, echo=TRUE}
+lf <- list.files("E:/DiaOutlineDataset/", pattern = "Cy(.*)txt$",full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+lf2<-data.frame(substr(lf1$V2, 1, 5))
+names(lf2)[1] <- "Type"
+
+coordinates <- import_txt(lf) 
+cyDiatomOutlines<-Out(coordinates, fac = lf2)
+
+panel(cyDiatomOutlines, fac="Type", names=TRUE)
+# stack(cyDiatomOutlines)
+stack(coo_center(cyDiatomOutlines))
+# calibrate_harmonicpower(cyDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
+cyDiatomOutlines.f <- efourier(cyDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+
+(2.4.2) PCA: Principal Component Analysis
+```{r, echo=TRUE}
+cyDiatomOutlines.p <- PCA(cyDiatomOutlines.f)
+
+tiff("E:/Supplement_6CymPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(cyDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="Cymbella PCA") #Supplement 6 in the paper.
+dev.off()
+
+plot(cyDiatomOutlines.p,"Type", title="Cymbella PCA")
+plot(cyDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
+```
+
+(2.4.3) Linear Discriminant Analysis
+```{r, echo=TRUE}
+cyDiatomOutlines.l <- LDA(cyDiatomOutlines.p,1)
+
+tiff("E:/Fig6CymLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(cyDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="Cymbella LDA") #Fig 6 in the paper.
+dev.off()
+
+plot(cyDiatomOutlines.l, title="Cymbella LDA") #Another plot version
+plot(cyDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
+```
+
+####(2.5.1) OUTLINE ANALYSIS - Gomphonema ONLY (NOTE: wuuut?)
+```{r, echo=TRUE}
+lf <- list.files("E:/DiaOutlineDataset/", pattern = "Go(.*)txt$",full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+lf2<-data.frame(substr(lf1$V2, 1, 5))
+names(lf2)[1] <- "Type"
+
+coordinates <- import_txt(lf) 
+goDiatomOutlines<-Out(coordinates, fac = lf2)
+
+panel(goDiatomOutlines, fac="Type", names=TRUE)
+# stack(goDiatomOutlines)
+stack(coo_center(goDiatomOutlines))
+# calibrate_harmonicpower(goDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
+goDiatomOutlines.f <- efourier(goDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+
+(2.5.2) PCA: Principal Component Analysis
+```{r, echo=TRUE}
+goDiatomOutlines.p <- PCA(goDiatomOutlines.f)
+
+tiff("E:/Supplement_5GomPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(goDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="Gomphonema PCA") #Supplement 5 in the paper.
+dev.off()
+
+plot(goDiatomOutlines.p,"Type", title="Gomphonema PCA")
+plot(goDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
+```
+
+(2.5.3) Linear Discriminant Analysis
+```{r, echo=TRUE}
+goDiatomOutlines.l <- LDA(goDiatomOutlines.p,1)
+
+tiff("E:/Fig4GomLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(goDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="Gomphonema LDA") #Fig 4 in the paper.
+dev.off()
+
+plot(goDiatomOutlines.l, title="Gomphonema LDA") #Another plot version
+plot(goDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
+```
+
+####(2.6.1) OUTLINE ANALYSIS - Gyrosigma ONLY
+```{r, echo=TRUE}
+lf <- list.files("E:/DiaOutlineDataset/", pattern = "Gy(.*)txt$",full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+lf2<-data.frame(substr(lf1$V2, 1, 5))
+names(lf2)[1] <- "Type"
+
+coordinates <- import_txt(lf) 
+gyDiatomOutlines<-Out(coordinates, fac = lf2)
+
+panel(gyDiatomOutlines, fac="Type", names=TRUE)
+# stack(gyDiatomOutlines)
+stack(coo_center(gyDiatomOutlines))
+# calibrate_harmonicpower(gyDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
+gyDiatomOutlines.f <- efourier(gyDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+
+(2.6.2) PCA: Principal Component Analysis
+```{r, echo=TRUE}
+gyDiatomOutlines.p <- PCA(gyDiatomOutlines.f)
+
+tiff("E:/Supplement_8GyrPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(gyDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="Gyrosigma PCA") #Supplement 8 in the paper.
+dev.off()
+
+plot(gyDiatomOutlines.p,"Type", title="Gyrosigma PCA")
+plot(gyDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
+```
+
+(2.6.3) Linear Discriminant Analysis
+```{r, echo=TRUE}
+gyDiatomOutlines.l <- LDA(gyDiatomOutlines.p,1)
+
+tiff("E:/Fig7GyrLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(gyDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="Gyrosigma LDA") #Fig 7 in the paper.
+dev.off()
+
+plot(gyDiatomOutlines.l, title="Gyrosigma LDA") #Another plot version
+plot(gyDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
+```
+
+####(2.7.1) OUTLINE ANALYSIS - Luticola ONLY
+```{r, echo=TRUE}
+lf <- list.files("E:/DiaOutlineDataset/", pattern = "Lu(.*)txt$",full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+lf2<-data.frame(substr(lf1$V2, 1, 5))
+names(lf2)[1] <- "Type"
+
+coordinates <- import_txt(lf) 
+luDiatomOutlines<-Out(coordinates, fac = lf2)
+
+panel(luDiatomOutlines, fac="Type", names=TRUE)
+# stack(luDiatomOutlines)
+stack(coo_center(luDiatomOutlines))
+# calibrate_harmonicpower(luDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
+luDiatomOutlines.f <- efourier(luDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+
+(2.7.2) PCA: Principal Component Analysis
+```{r, echo=TRUE}
+luDiatomOutlines.p <- PCA(luDiatomOutlines.f)
+
+tiff("E:/Supplement_7LutPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(luDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="Luticola PCA") #Supplement 7 in the paper.
+dev.off()
+
+plot(luDiatomOutlines.p,"Type", title="Luticola PCA")
+plot(luDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
+```
+
+(2.7.3) Linear Discriminant Analysis
+```{r, echo=TRUE}
+luDiatomOutlines.l <- LDA(luDiatomOutlines.p,1)
+
+tiff("E:/Fig5LutLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+plot(luDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="Luticola LDA") #Fig 5 in the paper.
+dev.off()
+
+plot(luDiatomOutlines.l, title="Luticola LDA") #Another plot version
+plot(luDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
+```

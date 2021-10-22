@@ -71,9 +71,13 @@ library(Momocs)
 
 "Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
 
-####((2)) Create a Data Set from .txt DiaOutline file
+####((2)) Create a Data Set from .txt DiaOutline file (not needed)
 ```{r, echo=TRUE}
-DiaOutlineDataset <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", sep = "", header = FALSE))
+m1 <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", sep = "", header = FALSE))
+m2 <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 02.txt", sep = "", header = FALSE))
+m3 <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 03.txt", sep = "", header = FALSE))
+
+DiaOutlineDataset <- c(m1, m2, m3)
 ```
 NOTE 1: The .txt file from DiaOutline contains x and y coordinates separated by space. I think we have to break it up into a matrix with two columns (?) with the as.matrix() function. 
 (sep = "")        -> separates space columns
@@ -83,26 +87,30 @@ NOTE 2: Perhaps I dont need to separate the .txt file into columns.. Maybe the n
 
 ####(2.2.1) OUTLINE ANALYSIS - Species data
 ```{r, echo=TRUE}
+#Following chunk is by me (old, see below)
 
-#Following chunk is by me
-
-lf <- list.files("C:/Program Files/DiaOutline_working directory/", pattern = "\\DiaOutline_trial trace 01.txt", full.names=TRUE)
+lf <- list.files("E:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", pattern = NULL, full.names=TRUE)
 
 #Problem comes below: "Error in table(lfl) : nothing to tabularise" 
 
-lf1<-lf_structure(lf,  split = "C:/Program Files/DiaOutline_working directory/", trim.extension = FALSE)
+lf1<-lf_structure(lf,  split = "E:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", trim.extension = FALSE)
 lf2<-data.frame(substr(lf1$V2, 1, 5))
 names(lf2)[1] <- "Type"
+```
 
-#Original chunk
-lf <- list.files("E:/DiaOutlineDataset/", pattern = "\\.txt$",full.names=TRUE)  
-lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)
+```{r, echo=TRUE}
+#Following chunk by me (new, came further)
+
+lf <- list.files("C:/Program Files/DiaOutline_working directory/DiaOutlineDataset/", pattern = "\\.txt$", full.names=TRUE)  
+lf1<-lf_structure(lf,  split = "C:/Program Files/DiaOutline_working directory/DiaOutlineDataset/", trim.extension = FALSE)
 lf2<-data.frame(substr(lf1$V2, 1, 5))
 names(lf2)[1] <- "Type"
 
 coordinates <- import_txt(lf) 
 allDiatomOutlines<-Out(coordinates, fac = lf2)
 
+
+#In the following comes the problem
 panel(allDiatomOutlines, fac="Type", names=TRUE)
 
 # stack(allDiatomOutlines)

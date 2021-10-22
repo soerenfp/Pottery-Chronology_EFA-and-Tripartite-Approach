@@ -71,35 +71,9 @@ library(Momocs)
 
 "Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
 
-####((2)) Create a Data Set from .txt DiaOutline file (not needed)
-```{r, echo=TRUE}
-m1 <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", sep = "", header = FALSE))
-m2 <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 02.txt", sep = "", header = FALSE))
-m3 <- as.matrix(read.table("C:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 03.txt", sep = "", header = FALSE))
-
-DiaOutlineDataset <- c(m1, m2, m3)
-```
-NOTE 1: The .txt file from DiaOutline contains x and y coordinates separated by space. I think we have to break it up into a matrix with two columns (?) with the as.matrix() function. 
-(sep = "")        -> separates space columns
-(header = FALSE)  -> describes that the first row does NOT contain header                            information
-
-NOTE 2: Perhaps I dont need to separate the .txt file into columns.. Maybe the next code chunk will handle the data set?
-
 ####(2.2.1) OUTLINE ANALYSIS - Species data
 ```{r, echo=TRUE}
-#Following chunk is by me (old, see below)
-
-lf <- list.files("E:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", pattern = NULL, full.names=TRUE)
-
-#Problem comes below: "Error in table(lfl) : nothing to tabularise" 
-
-lf1<-lf_structure(lf,  split = "E:/Program Files/DiaOutline_working directory/DiaOutline_trial trace 01.txt", trim.extension = FALSE)
-lf2<-data.frame(substr(lf1$V2, 1, 5))
-names(lf2)[1] <- "Type"
-```
-
-```{r, echo=TRUE}
-#Following chunk by me (new, came further)
+#Following chunk by me
 
 lf <- list.files("C:/Program Files/DiaOutline_working directory/DiaOutlineDataset/", pattern = "\\.txt$", full.names=TRUE)  
 lf1<-lf_structure(lf,  split = "C:/Program Files/DiaOutline_working directory/DiaOutlineDataset/", trim.extension = FALSE)
@@ -110,11 +84,14 @@ coordinates <- import_txt(lf)
 allDiatomOutlines<-Out(coordinates, fac = lf2)
 
 
-#In the following comes the problem
+#In the following comes the problem...
 panel(allDiatomOutlines, fac="Type", names=TRUE)
 
+#...but if I run the following chunk I get my three Trial trace.txt files in a coordinate system!
 # stack(allDiatomOutlines)
 stack(coo_center(allDiatomOutlines))
+
+#But then comes the next problem below
 # calibrate_harmonicpower(allDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
 allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
 ```

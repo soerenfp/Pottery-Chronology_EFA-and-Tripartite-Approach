@@ -10,8 +10,8 @@ output: html_document
 
 # This document is based on the method and work-flow from:
 
-Wishkerman, A., and P. B. Hamilton. 2018. Shape outline extraction software       (DiaOutline) for elliptic Fourier analysis application in morphometric          studies. Applications in Plant Sciences 6(12): e1204.
-  https://doi:10.1002/aps3.1204
+Wishkerman, A., and P. B. Hamilton. 2018. Shape outline extraction software (DiaOutline) for elliptic Fourier analysis application in morphometric studies. Applications in Plant Sciences 6(12): e1204.
+https://doi.org/10.1002/aps3.1204 
 
 # DiaOutline and example code presented here is available at:
 
@@ -19,9 +19,9 @@ https://github.com/wishkerman/DiaOutline
 
 # Supplementary litterature 
 
-Caple, J., J. Byrd, C. N. Stephan. 2017. Elliptical Fourier analysis:             fundamentals, applications, and value for forensic anthropology. Int J Legal    Med (2017) 131: 1675–1690. https://doi:10.1007/s00414-017-1555-0 
+Caple, J., J. Byrd, C. N. Stephan. 2017. Elliptical Fourier analysis: fundamentals, applications, and value for forensic anthropology. Int J Legal Med (2017) 131: 1675–1690. https://doi.org/10.1007/s00414-017-1555-0 
 
-Wang, Li-Ying, and Ben Marwik. 2020. Standardization of ceramic shape: A case     study of Iron Age pottery from northeastern Taiwan. Journal of Archaeological   Science: Reports. Vol. 33. https://doi.org/10.1016/j.jasrep.2020.102554
+Wang, Li-Ying, and Ben Marwik. 2020. Standardization of ceramic shape: A case study of Iron Age pottery from northeastern Taiwan. Journal of Archaeological Science: Reports. Vol. 33. https://doi.org/10.1016/j.jasrep.2020.102554
 
 
 ---------------------------
@@ -44,8 +44,9 @@ Wang, Li-Ying, and Ben Marwik. 2020. Standardization of ceramic shape: A case   
 
 ####(2) Statistical analysis (Wishkerman & Hamilton 2018)####
 
-(2.1.1) Install these packages for statistical analysis
+(2.1.1) Install these packages for statistical analysis...
 ```{r, echo=TRUE}
+install.packages("bios2mds")
 install.packages("MASS")
 install.packages("ggplot2")
 install.packages("GGally")
@@ -58,6 +59,7 @@ install.packages("Momocs")
 ```
 (2.1.2) ...and load
 ```{r, echo=TRUE}
+library(bios2mds)
 library(MASS)
 library(ggplot2)
 library(GGally)
@@ -71,32 +73,35 @@ library(Momocs)
 
 "Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
 
-####(2.2.1) OUTLINE ANALYSIS - Species data
+####(2.2.1) OUTLINE ANALYSIS - Species data####
 ```{r, echo=TRUE}
-#Following chunk by me
 
-lf <- list.files("C:/Program Files/DiaOutline_working directory/DiaOutlineDataset/", pattern = "\\.txt$", full.names=TRUE)  
-lf1<-lf_structure(lf,  split = "C:/Program Files/DiaOutline_working directory/DiaOutlineDataset/", trim.extension = FALSE)
+#NOTE: list.files() command specifies the path to the data! Change if data is located in another place (right now it is set to my work PC). The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
+
+lf <- list.files("C:/Users/Pedersen/Desktop/DiaOutline trial trace", pattern = "\\.txt$", full.names=TRUE)  
+#NOTE: The following split = "C:/(...)" function I believe is again to specify the path to the data.
+
+lf1<-lf_structure(lf,  split = "C:/Users/Pedersen/Desktop/DiaOutline trial trace", trim.extension = FALSE)
 lf2<-data.frame(substr(lf1$V2, 1, 5))
 names(lf2)[1] <- "Type"
 
 coordinates <- import_txt(lf) 
 allDiatomOutlines<-Out(coordinates, fac = lf2)
 
-
-#In the following comes the problem...
 panel(allDiatomOutlines, fac="Type", names=TRUE)
 
-#...but if I run the following chunk I get my three Trial trace.txt files in a coordinate system!
 # stack(allDiatomOutlines)
 stack(coo_center(allDiatomOutlines))
-
-#But then comes the next problem below
-# calibrate_harmonicpower(allDiatomOutlines) #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
-allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
 ```
 
-(2.2.2) PCA: Principal Component Analysis
+```{r, echo=TRUE}
+# calibrate_harmonicpower(allDiatomOutlines) 
+#Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
+allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+```
+OK, the first part of the outline analysis is fairly done. I got my shapes in a coordinate system (although they are tilted 90° to the left), and the commands seems to be working. The last line (allDiatomOutlines.f) has a warning that -`norm=TRUE` is used and this may be troublesome. See ?efourier-, but when I look at ?efourier then the standard is "norm=TRUE". I don't believe that it is of great importance..
+
+#(2.2.2) PCA: Principal Component Analysis
 
 "Both PCA and LDA are linear transformation techniques, and whereas LDA is supervised, PCA is unsupervised." (Wishkerman & Hamilton 2018)
 
@@ -105,15 +110,20 @@ allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics s
 ```{r, echo=TRUE}
 allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
-tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
-plot(allDiatomOutlines.p, 1, chull.filled=TRUE,stars=TRUE, title="All data PCA") #Supplement 10 in the paper.
+#NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work.
+
+tiff("C:/Users/Pedersen/Desktop/DiaOutline trial trace/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+
+#NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read somewhere that this is a specific problem for Windows, and that Apple does not have this issue..
+
+plot(allDiatomOutlines.p, 1, chull.filled=TRUE, stars=TRUE, title="All data PCA") #Supplement 10 in the paper.
 dev.off()
 
 plot(allDiatomOutlines.p,"Type", title="All data PCA")
 plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
 ```
 
-(2.2.3) LDA: Linear Discriminant Analysis
+#(2.2.3) LDA: Linear Discriminant Analysis
 
 "Both PCA and LDA are linear transformation techniques, and whereas LDA is supervised, PCA is unsupervised." (Wishkerman & Hamilton 2018)
 
@@ -128,7 +138,7 @@ plot(allDiatomOutlines.l, title="All data LDA") #Another plot version
 plot(allDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version
 ```
 
-(2.2.3) MANOVA
+#(2.2.3) MANOVA
 
 "MANOVA analysis of shapes was also used to evaluate the significance of the determined shape groups." (Wishkerman & Hamilton 2018)
 
@@ -143,7 +153,8 @@ lapply(mpw, print)
 sink()
 ```
 
-####(2.3.1) OUTLINE ANALYSIS - Genera data
+
+####(2.3.1) OUTLINE ANALYSIS - Genera data####
 ```{r, echo=TRUE}
 lf <- list.files("E:/DiaOutlineDataset/", pattern = "\\.txt$",full.names=TRUE)  
 lf1<-lf_structure(lf,  split = "E:/DiaOutlineDataset/", trim.extension = FALSE)

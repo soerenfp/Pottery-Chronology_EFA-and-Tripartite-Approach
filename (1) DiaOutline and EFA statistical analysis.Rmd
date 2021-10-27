@@ -19,6 +19,10 @@ https://github.com/wishkerman/DiaOutline
 
 # Supplementary litterature 
 
+Bonhomme, Vincent; Sandrine Picq, Cedric Gaucherel, Julien Claude. 2014. Momocs: Outline analysis
+using R. Journal of Statistical Software, University of California, Los Angeles, 2014, 56 (13), 24 p.
+https://doi.org/10.18637/jss.v056.i13 
+
 Caple, J., J. Byrd, C. N. Stephan. 2017. Elliptical Fourier analysis: fundamentals, applications, and value for forensic anthropology. Int J Legal Med (2017) 131: 1675–1690. https://doi.org/10.1007/s00414-017-1555-0 
 
 Wang, Li-Ying, and Ben Marwik. 2020. Standardization of ceramic shape: A case study of Iron Age pottery from northeastern Taiwan. Journal of Archaeological Science: Reports. Vol. 33. https://doi.org/10.1016/j.jasrep.2020.102554
@@ -79,9 +83,13 @@ library(Momocs)
 #NOTE: list.files() command specifies the path to the data! Change if data is located in another place (right now it is set to my work PC). The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
 
 lf <- list.files("C:/Users/Pedersen/Desktop/DiaOutline trial trace", pattern = "\\.txt$", full.names=TRUE)  
+
 #NOTE: The following split = "C:/(...)" function I believe is again to specify the path to the data.
 
 lf1<-lf_structure(lf,  split = "C:/Users/Pedersen/Desktop/DiaOutline trial trace", trim.extension = FALSE)
+
+#NOTE: "In order to specify explanatory variables going along with the coordinate or coefficient set, grouping factors or covariates can be specified through a data.frame(), and then used to create subsets (see ?Coo)." (Bonhomme et al. 2014)
+
 lf2<-data.frame(substr(lf1$V2, 1, 5))
 names(lf2)[1] <- "Type"
 
@@ -95,6 +103,9 @@ stack(coo_center(allDiatomOutlines))
 ```
 
 ```{r, echo=TRUE}
+
+#NOTE: "Conflicting situations such as those suggested by this familiar saying are actually a recurrent issue in morphometrics: what is the right number of harmonics? Unfortunately, no objecttive criterion exists so far, and the criterion used usually depends on the scope of the study." (Bonhomme et al. 2014)
+
 # calibrate_harmonicpower(allDiatomOutlines) 
 #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
 allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
@@ -112,12 +123,13 @@ allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
 #NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work -> NO, it just made an empty .tiff file in the folder!
 
-tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+#tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
 #NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read somewhere that this is a specific problem for Windows, and that Apple does not have this issue..
 
 plot(allDiatomOutlines.p, 1, chull.filled=TRUE, stars=TRUE, title="All data PCA") #Supplement 10 in the paper.
-dev.off()
+
+#dev.off()
 
 plot(allDiatomOutlines.p,"Type", title="All data PCA")
 plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)

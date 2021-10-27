@@ -110,9 +110,9 @@ OK, the first part of the outline analysis is fairly done. I got my shapes in a 
 ```{r, echo=TRUE}
 allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
-#NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work.
+#NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work -> NO, it just made an empty .tiff file in the folder!
 
-tiff("C:/Users/Pedersen/Desktop/DiaOutline trial trace/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
 #NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read somewhere that this is a specific problem for Windows, and that Apple does not have this issue..
 

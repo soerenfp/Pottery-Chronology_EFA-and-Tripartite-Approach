@@ -79,24 +79,55 @@ library(Momocs)
 ####(2.2.1) OUTLINE ANALYSIS - Species data####
 ```{r, echo=TRUE}
 
-#NOTE: list.files() command specifies the path to the data! Change if data is located in another place (right now it is set to my work PC). The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
+#(1) Produce a character vector of the names of files or directories in the named directory with the list.files() arguement. The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
 
 lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", pattern = "\\.txt$", full.names=TRUE)  
 
+##########
+
+#(2) If filenames are consistently named with the same character serating factors, and with every individual including its belonging levels, this function returns a data.frame from it that can be passed to Out, Opn, Ldk objects.
+
+#split = (...) -> character, the spliting factor used for the file names.
+
 #NOTE: The following split = "C:/(...)" function I believe is again to specify the path to the data.
 
-lf1<-lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", trim.extension = FALSE)
+lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", trim.extension = FALSE)
 
-#NOTE: "In order to specify explanatory variables going along with the coordinate or coefficient set, grouping factors or covariates can be specified through a data.frame(), and then used to create subsets (see ?Coo)." (Bonhomme et al. 2014)
+##########
+
+#(3) The function data.frame() creates data frames, tightly coupled collections of variables which share many of the properties of matrices and of lists
+
+#"In order to specify explanatory variables going along with the coordinate or coefficient set, grouping factors or covariates can be specified through a data.frame(), and then used to create subsets (see ?Coo)." (Bonhomme et al. 2014)
 
 lf2<-data.frame(substr(lf1$V2, 1, 5))
+
+#...and name the data frame
+
 names(lf2)[1] <- "Type"
 
-coordinates <- import_txt(lf) 
-allDiatomOutlines<-Out(coordinates, fac = lf2)
+##########
+
+#(4) Import the coordinates from the .txt files
+
+coordinates <- import_txt(lf)
+
+##########
+
+#(5) Build an Out object -> In Momocs, Out-classes objects are lists of closed outlines, with optional components, and on which generic methods such as plotting methods (e.g. stack) and specific methods (e.g. efourier can be applied. Out objects are primarily Coo objects.
+
+allDiatomOutlines <- Out(coordinates, fac = lf2)
+
+##########
+
+#(6) Plot all the outlines, side by side, from a Coo (Out, Opn or Ldk) objects.
 
 #NOTE: New problem below -> Error in coo_check.default(X[[i]], ...) : do not know how to turn into a coo
+
 panel(allDiatomOutlines, fac="Type", names=TRUE)
+
+##########
+
+#(7) Stack all the vessel shapes into one coordinate system
 
 #NOTE: stack(allDiatomOutlines) now there is one being really large and the rest is pretty small. I need to change that before uploading it to DiaOutline
 
@@ -105,6 +136,9 @@ stack(coo_center(allDiatomOutlines))
 ```
 
 ```{r, echo=TRUE}
+##########
+
+#(8) Compute the EFA from a matrix
 
 #NOTE: "Conflicting situations such as those suggested by this familiar saying are actually a recurrent issue in morphometrics: what is the right number of harmonics? Unfortunately, no objecttive criterion exists so far, and the criterion used usually depends on the scope of the study." (Bonhomme et al. 2014)
 

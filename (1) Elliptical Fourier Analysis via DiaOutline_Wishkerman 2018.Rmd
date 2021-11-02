@@ -1,5 +1,5 @@
 ---
-title: "DiaOutline and Elliptical Fourier Analysis (EFA)"
+title: "Elliptical Fourier Analysis via DiaOutline_Wishkerman 2018"
 author: "Soren Pedersen"
 date: "18/10/2021"
 output: html_document

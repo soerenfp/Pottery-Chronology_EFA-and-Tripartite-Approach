@@ -77,19 +77,23 @@ library(Momocs)
 "Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
 
 ####(2.2.1) OUTLINE ANALYSIS - Species data####
+NOTE: Somewhere before the start of the analysis I have to smoothen the outlines because of the pixel noise from the original pictures. Bonhomme et al. 2014 (p. 11) suggests to use either coo_smooth() or eFourier ().
 ```{r, echo=TRUE}
 
-#(1) Produce a character vector of the names of files or directories in the named directory with the list.files() arguement. The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
+#(1) Produce a character vector of the names of files or directories in the named directory with the list.files() arguement. 
+
+#NOTE: The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
 
 lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", pattern = "\\.txt$", full.names=TRUE)  
 
 ##########
 
-#(2) If filenames are consistently named with the same character serating factors, and with every individual including its belonging levels, this function returns a data.frame from it that can be passed to Out, Opn, Ldk objects.
+#(2) If filenames are consistently named with the same character serating factors, and with every individual including its belonging levels, this function lf_structure() returns a data.frame from it that can be passed to Out, Opn, Ldk objects.
 
 #split = (...) -> character, the spliting factor used for the file names.
 
 #NOTE: The following split = "C:/(...)" function I believe is again to specify the path to the data.
+#NOTE: Perhaps my problem about "do not know how to turn into a coo" in part 6 below already starts here? Perhaps the path is wrong/to long or some of the .txt files are crooked.
 
 lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", trim.extension = FALSE)
 
@@ -107,7 +111,7 @@ names(lf2)[1] <- "Type"
 
 ##########
 
-#(4) Import the coordinates from the .txt files
+#(4) Import the coordinates from the .txt DiaOutline files
 
 coordinates <- import_txt(lf)
 
@@ -121,7 +125,7 @@ allDiatomOutlines <- Out(coordinates, fac = lf2)
 
 #(6) Plot all the outlines, side by side, from a Coo (Out, Opn or Ldk) objects.
 
-#NOTE: New problem below -> Error in coo_check.default(X[[i]], ...) : do not know how to turn into a coo
+#NOTE: New problem below -> "Error in coo_check.default(X[[i]], ...) : do not know how to turn into a coo"
 
 panel(allDiatomOutlines, fac="Type", names=TRUE)
 
@@ -129,7 +133,7 @@ panel(allDiatomOutlines, fac="Type", names=TRUE)
 
 #(7) Stack all the vessel shapes into one coordinate system
 
-#NOTE: stack(allDiatomOutlines) now there is one being really large and the rest is pretty small. I need to change that before uploading it to DiaOutline
+#NOTE: stack(allDiatomOutlines) now there is one vessel being really large and the rest is pretty small. I need to change that before uploading it to DiaOutline
 
 # stack(allDiatomOutlines)
 stack(coo_center(allDiatomOutlines))
@@ -140,7 +144,9 @@ stack(coo_center(allDiatomOutlines))
 
 #(8) Compute the EFA from a matrix
 
-#NOTE: "Conflicting situations such as those suggested by this familiar saying are actually a recurrent issue in morphometrics: what is the right number of harmonics? Unfortunately, no objecttive criterion exists so far, and the criterion used usually depends on the scope of the study." (Bonhomme et al. 2014)
+#"Conflicting situations such as those suggested by this familiar saying are actually a recurrent issue in morphometrics: what is the right number of harmonics? Unfortunately, no objecttive criterion exists so far, and the criterion used usually depends on the scope of the study." (Bonhomme et al. 2014)
+
+#NOTE: For more information about estimating the right amount of harmonics see Bonhomme et al. 2014, p. 12-14
 
 # calibrate_harmonicpower(allDiatomOutlines) 
 #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
@@ -159,7 +165,8 @@ allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
 #NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work -> NO, it just made an empty .tiff file in the folder!
 
-#tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+#NOTE: Nick said that perhaps I do not need to create a tiff image. I try to leave it out for now.
+tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
 #NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read somewhere that this is a specific problem for Windows, and that Apple does not have this issue..
 
@@ -191,6 +198,9 @@ plot(allDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.label
 "MANOVA analysis of shapes was also used to evaluate the significance of the determined shape groups." (Wishkerman & Hamilton 2018)
 
 "The principal component (PC) scores were analyzed with a multivariate analysis of variance (MANOVA) to test significant differences in shapes between occupation phases." (Wang & Marwik 2020)
+
+"We can test for a difference between subsets of shapes using multivariate analysis of variance (MANOVA), with every harmonic coefficient being considered as an homologous quantitative variable measured for every shape of the dataset."
+(Bonhomme et al. 2014)
 
 ```{r, echo=TRUE}
 m<-MANOVA(allDiatomOutlines.p, 'Type')

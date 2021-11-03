@@ -84,7 +84,7 @@ NOTE: Somewhere before the start of the analysis I have to smoothen the outlines
 
 #NOTE: The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
 
-lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", pattern = "\\.txt$", full.names=TRUE)  
+lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Trial traces01", pattern = "\\.txt$", full.names=TRUE)  
 
 ##########
 
@@ -95,7 +95,7 @@ lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approa
 #NOTE: The following split = "C:/(...)" function I believe is again to specify the path to the data.
 #NOTE: Perhaps my problem about "do not know how to turn into a coo" in part 6 below already starts here? Perhaps the path is wrong/to long or some of the .txt files are crooked.
 
-lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", trim.extension = FALSE)
+lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Trial traces01", trim.extension = FALSE)
 
 ##########
 
@@ -125,15 +125,18 @@ allDiatomOutlines <- Out(coordinates, fac = lf2)
 
 #(6) Plot all the outlines, side by side, from a Coo (Out, Opn or Ldk) objects.
 
-#NOTE: New problem below -> "Error in coo_check.default(X[[i]], ...) : do not know how to turn into a coo"
+#NOTE: New problem below -> "Error in coo_check.default(X[[i]], ...) : do not know how to turn into a coo" -> The problem is that some of the .txt files might be crooked. When I try to run the codes with just my original three trial traces, it works. When I try with the new 20 .txt files this error occurs.
+#=> Problem solved! My trial trace 05.txt file was crooked and removing it solved the problem!
 
 panel(allDiatomOutlines, fac="Type", names=TRUE)
+```
 
+```{r, echo=TRUE}
 ##########
 
 #(7) Stack all the vessel shapes into one coordinate system
 
-#NOTE: stack(allDiatomOutlines) now there is one vessel being really large and the rest is pretty small. I need to change that before uploading it to DiaOutline
+#NOTE: stack(allDiatomOutlines) now there is one vessel (trial trace 04) being really large and the rest is pretty small. I need to change that before uploading it to DiaOutline
 
 # stack(allDiatomOutlines)
 stack(coo_center(allDiatomOutlines))
@@ -150,9 +153,11 @@ stack(coo_center(allDiatomOutlines))
 
 # calibrate_harmonicpower(allDiatomOutlines) 
 #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
-allDiatomOutlines.f <- efourier(allDiatomOutlines, nb.h=32) #Num. of harmonics set to 32
+allDiatomOutlines.f <- efourier(allDiatomOutlines, norm = TRUE, nb.h=32) #Num. of harmonics set to 32
 ```
-OK, the first part of the outline analysis is fairly done. I got my shapes in a coordinate system (although they are tilted 90° to the left), and the commands seems to be working. The last line (allDiatomOutlines.f) has a warning that -`norm=TRUE` is used and this may be troublesome. See ?efourier-, but when I look at ?efourier then the standard is "norm=TRUE". I don't believe that it is of great importance..
+OK, the first part of the outline analysis is fairly done. I got my shapes in a coordinate system (although they are tilted 90° to the left), and the commands seems to be working. The last line (allDiatomOutlines.f) has a warning that -`norm=TRUE` is used and this may be troublesome. See ?efourier-, but when I look at ?efourier then the standard is "norm=TRUE". I don't believe that it is of great importance.
+
+I changed the allDiatomOutlines.f code above to norm = TRUE. No more warning messages
 
 #(2.2.2) PCA: Principal Component Analysis
 
@@ -161,19 +166,27 @@ OK, the first part of the outline analysis is fairly done. I got my shapes in a 
 "(...) A common procedure is using dimensional reduction techniques, such as Principal Components Analysis or Canonical Variate Analysis, to capture the key features that represent the overall shape. Visualization of the reduced data enables the identification of groups, followed by statistical tests to robustly distinguish them." (Wang & Marwik 2020)
 
 ```{r, echo=TRUE}
+#Principle Component Analysis
+
 allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
 #NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work -> NO, it just made an empty .tiff file in the folder!
-
 #NOTE: Nick said that perhaps I do not need to create a tiff image. I try to leave it out for now.
-tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
-#NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read somewhere that this is a specific problem for Windows, and that Apple does not have this issue..
+#tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
-plot(allDiatomOutlines.p, 1, chull.filled=TRUE, stars=TRUE, title="All data PCA") #Supplement 10 in the paper.
+#NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read that this is a specific problem for Windows, and that Apple does not have this issue (https://github.com/MomX/Momocs/issues/212) 
+
+plot(allDiatomOutlines.p, chull.filled = TRUE, stars = TRUE, title="All data PCA") #Supplement 10 in the paper.
+
+#NOTE: I can solve the problem with removing the "1" in the code. I think the "1" is some kind of column ID.
+#Original line plot(allDiatomOutlines.p, 1, chull.filled = TRUE, stars = TRUE, title="All data PCA")
 
 #dev.off()
+```
+Hmm, I do not know if this looks right. It looks like only one vessel is in the plot (trial trace 04). After I removed trial trace 04 it looks better, but I fear it is still just one vessel (trial trace 06 or 07) which is in the plot.
 
+```{r, echo=TRUE}
 plot(allDiatomOutlines.p,"Type", title="All data PCA")
 plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
 ```
@@ -183,7 +196,7 @@ plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.label
 "Both PCA and LDA are linear transformation techniques, and whereas LDA is supervised, PCA is unsupervised." (Wishkerman & Hamilton 2018)
 
 ```{r, echo=TRUE}
-allDiatomOutlines.l <- LDA(allDiatomOutlines.p,1)
+allDiatomOutlines.l <- LDA(allDiatomOutlines.p)
 
 tiff("E:/Fig8AllLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 plot(allDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="All data LDA") #Fig 8 in the paper.
@@ -210,7 +223,6 @@ sink("E:/Manova.txt")
 lapply(mpw, print)
 sink()
 ```
-
 
 ####(2.3.1) OUTLINE ANALYSIS - Genera data####
 ```{r, echo=TRUE}

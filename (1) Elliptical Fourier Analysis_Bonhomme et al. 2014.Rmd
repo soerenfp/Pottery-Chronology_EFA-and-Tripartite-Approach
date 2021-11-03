@@ -13,6 +13,11 @@ output: html_document
 
 Vincent Bonhomme, Sandrine Picq, Cedric Gaucherel, Julien Claude. Momocs : outline analysis using R. Journal of Statistical Software, University of California, Los Angeles, 2014, 56 (13), 24 p. https://doi.org/10.18637/jss.v056.i13
 
+#Supplementary litterature 
+
+Wishkerman, A., and P. B. Hamilton. 2018. Shape outline extraction software (DiaOutline) for elliptic Fourier analysis application in morphometric studies. Applications in Plant Sciences 6(12): e1204.
+https://doi.org/10.1002/aps3.1204 
+
 ---------------------------
 ####METHOD AND ANALYSIS####
 ---------------------------
@@ -33,33 +38,24 @@ Vincent Bonhomme, Sandrine Picq, Cedric Gaucherel, Julien Claude. Momocs : outli
 
 (NOTE: Most important is the "Momocs" package)
 ```{r, echo=TRUE}
-install.packages("bios2mds")
-install.packages("MASS")
-install.packages("ggplot2")
-install.packages("GGally")
-install.packages("doBy")
-install.packages("data.table")
-install.packages("plyr")
-install.packages("grid")
-install.packages("gridExtra")
 install.packages("Momocs")
 ```
 #(1.2) ...and load
 ```{r, echo=TRUE}
-library(bios2mds)
-library(MASS)
-library(ggplot2)
-library(GGally)
-library(doBy)
-library(data.table)
-library(plyr)
-library(grid)
-library(gridExtra)
 library(Momocs)
 ```
 
-####(2) Load data
+####(2) Load and prepare data (Wishkerman & Hamilton 2018)
 
+```{r, echo=TRUE}
+#(1) Produce a character vector of the names of files or directories in the named directory with the list.files() arguement.
+
+lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", pattern = "\\.txt$", full.names=TRUE)
+
+#(2) If filenames are consistently named with the same character serating factors, and with every individual including its belonging levels, this function lf_structure() returns a data.frame from it that can be passed to Out, Opn, Ldk objects.
+
+lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/DiaOutline trial trace/DiaOutline trial traces", trim.extension = FALSE)
+```
 ####(3) Elliptical Fourier Analysis using Momocs
 
 #(3.1) Introduction
@@ -73,10 +69,10 @@ library(Momocs)
 On the extracted harmonic coefficients, some multivariate analyses will be presented (Bonhomme et al. 2014): 
 •	principal component analysis and 
 •	morphological space, to illustrate the global bottle diversity, and 
-•	multivariate ANOVA, to test for shape difference between the two sets of         bottles. 
+•	multivariate ANOVA, to test for shape difference between the two sets of bottles. 
 •	Then, linear discriminant analysis and 
-•	hierarchical clustering will be introduced as perspectives for Momocs and        because they are common and helpful statistical tools for those interested in    multiple comparison. 
-•	Finally, thin plate splines analysis will be introduced: this is not only a     tribute to D'Arcy Thompson's work but it may also bring great insights into       the developmental differences underlying differences in the shapes compared.
+•	hierarchical clustering will be introduced as perspectives for Momocs and because they are common and helpful statistical tools for those interested in    multiple comparison. 
+•	Finally, thin plate splines analysis will be introduced: this is not only a tribute to D'Arcy Thompson's work but it may also bring great insights into the developmental differences underlying differences in the shapes compared.
 
 #(3.2) Outline extraction
 
@@ -97,7 +93,7 @@ On the extracted harmonic coefficients, some multivariate analyses will be prese
 "First, a `Coo'-object can be passed to harm.qual() to observe the reconstructed shape for a range of harmonics (Figure 6)." (Bonhomme et al. 2014)
 
 ```{r, echo=TRUE}
-hqual(bot, method = "eFourier", id = 16, harm.range = 1:49,+ palette = col.sari, plot.method = "panel")
+hqual(lf1, method = "eFourier", id = 16, harm.range = 1:49, palette = col.sari, plot.method = "panel")
 ```
 
 #(3.3.2) Through deviations
@@ -125,7 +121,7 @@ hpow(bot)
 matrix is obtained along with grouping factors, individual names, etc. and returned as a `Coe' class object." (Bonhomme et al. 2014)
 
 ```{r, echo=TRUE}
-botF <- eFourier(bot, nb.h = 20)
+botF <- efourier(lf1, nb.h = 20)
 botF
 ```
 

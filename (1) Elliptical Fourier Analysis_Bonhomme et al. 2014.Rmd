@@ -1,0 +1,179 @@
+---
+title: "Elliptical Fourerier Analysis_Bonhomme et al. 2014"
+author: "Soren Pedersen"
+date: "2/11/2021"
+output: html_document
+---
+
+--------------------
+####INTRODUCTION####
+--------------------
+
+# This document is based on the method and work-flow from:
+
+Vincent Bonhomme, Sandrine Picq, Cedric Gaucherel, Julien Claude. Momocs : outline analysis using R. Journal of Statistical Software, University of California, Los Angeles, 2014, 56 (13), 24 p. https://doi.org/10.18637/jss.v056.i13
+
+---------------------------
+####METHOD AND ANALYSIS####
+---------------------------
+
+####Introduction to EFA####
+
+"EFA uses periodic functions to capture geometric information, where an outline is decomposed into a series of ellipses described by trigonometric functions (Adams et al., 2004; Bonhomme et al., 2014; Claude, 2008). That is, coordinates along a curve are converted into Fourier function coefficients, called harmonic coefficients or harmonics (Kuhl and Giardina, 1982). The number of harmonics determines the quality and precision of the geometric representation of an object. The harmonic power, a cumulative sum of squared harmonic coefficients, provides a robust rule for determining the desired number of harmonics (Bonhomme et al., 2014)."(Wang & Marwik 2020)
+
+"Geometric morphometrics (GMM) differs from traditional linear measurements through its use of Cartesian coordinates of morphological structures to quantify and analyze shape (Adams et al., 2004; Bookstein, 1997; Lawing and Polly, 2010; Slice, 2007). Landmarks, curves or outlines of objects can be represented by coordinates in terms of their unique point locations with respect to numerical values on coordinate axes." (Wang & Marwik 2020)
+
+"There are two common morphometric approaches: landmark and outline methods (Adams et al., 2004). Landmark GMM approaches assign a set of landmarks and/or semilandmarks onto objects as reference points. Generalized Procrustes analysis (GPA) is used to superimpose landmark data on a common coordinate system by translating, rotating, and scaling (Bookstein, 1991). After the GPA procedure, superimposed landmark coordinates become shape variables that allow further statistical analyses (Slice, 2007)(...)." (NOTE: continue section (2.2.2) PCA) (Wang & Marwik 2020)
+
+####Statistical analysis (Bonhomme et al. 2014)####
+
+####(1) Install packages for statistical analysis
+
+#(1.1) Install these packages, from Wishkerman & Hamilton 2018
+
+(NOTE: Most important is the "Momocs" package)
+```{r, echo=TRUE}
+install.packages("bios2mds")
+install.packages("MASS")
+install.packages("ggplot2")
+install.packages("GGally")
+install.packages("doBy")
+install.packages("data.table")
+install.packages("plyr")
+install.packages("grid")
+install.packages("gridExtra")
+install.packages("Momocs")
+```
+#(1.2) ...and load
+```{r, echo=TRUE}
+library(bios2mds)
+library(MASS)
+library(ggplot2)
+library(GGally)
+library(doBy)
+library(data.table)
+library(plyr)
+library(grid)
+library(gridExtra)
+library(Momocs)
+```
+
+####(2) Load data
+
+####(3) Elliptical Fourier Analysis using Momocs
+
+#(3.1) Introduction
+
+"Below are provided step-by-step guidelines for performing MOdern MOrphometriCS, from which Momocs derives its name, using R. The package's vignette “A Graphical Introduction to Momocs” and “Outline Analysis Using R” (Bonhomme 2012) also provides an extensive description of the functions of the package." (Bonhomme et al. 2014)
+
+"Momocs is S4-oriented (Chambers 1998) which has many advantages in terms of usage and programming: it prevents typing errors, provides validity checking, allows inheritance and encapsulation, etc. (see Genolini 2008). In practical terms, lists of coordinates and matrices of harmonic coefficients, are handled through `Coo' and `Coe' class objects respectively, to which methods can be applied. For those not familiar with S4 objects, data stored in objects can be retrieved and used as classical S3 objects in R: matrices, factors, etc. The Momocs documentation provides an extensive description of these classes and the methods that can be applied to them. The case study presented below will focus on the basic (and probably typical) use of the package." (Bonhomme et al. 2014)
+
+"All the following examples are based on the bottles dataset from the package (see ?bot and Figure 5). We want to test if whisky and beer bottles have different shapes. How to calibrate outline analysis parameters and then obtain a matrix of normalized harmonic coefficients will also be discussed." (Bonhomme et al. 2014)
+
+On the extracted harmonic coefficients, some multivariate analyses will be presented (Bonhomme et al. 2014): 
+•	principal component analysis and 
+•	morphological space, to illustrate the global bottle diversity, and 
+•	multivariate ANOVA, to test for shape difference between the two sets of         bottles. 
+•	Then, linear discriminant analysis and 
+•	hierarchical clustering will be introduced as perspectives for Momocs and        because they are common and helpful statistical tools for those interested in    multiple comparison. 
+•	Finally, thin plate splines analysis will be introduced: this is not only a     tribute to D'Arcy Thompson's work but it may also bring great insights into       the developmental differences underlying differences in the shapes compared.
+
+#(3.2) Outline extraction
+
+(NOTE: Here I can use DiaOutline - Wishkerman 2018)
+
+"The input data for the morphometric analysis of outlines is, for two-dimension shapes, a set of (x; y) pixel coordinates sampled on each outline. Momocs provides facilities to convert a set of .jpg black-and-white images, e.g., as classically obtained with image analysis stations when working on biological objects (see ?import.jpg)." (Bonhomme et al. 2014)
+
+"Lists of coordinates, stored in separate .txt files, will be a convenient alternative when data are derived from GIS (see ?import.txt)" (Bonhomme et al. 2014)
+
+"Outlines are finally included in a `Coo' class object. Outlines can be visualized in a one page graph (Figure 5). They can be centered, aligned, scaled and homologous landmarks can be defined to perform a Procrustes alignment (see Friess and Baylac 2003) before an elliptical Fourier analysis. When the outlines become rough due to artifacts during the digitization process (for instance when automatic outlining produces noise around the outline), outlines can be smoothed either when outlines are extracted from images, or before the calculation of harmonic coefficients (see ?coo.smooth and ?eFourier for instance)." (Bonhomme et al. 2014)
+
+#(3.3) Calibration of outline analysis
+
+"Fourier-based approaches can fit any outline provided that the number of harmonics is large and the outline smooth enough between sampled points, while the signal/noise ratio can be very low for high order harmonics." (Bonhomme et al. 2014)
+
+#(3.3.1) Through shape reconstruction
+
+"First, a `Coo'-object can be passed to harm.qual() to observe the reconstructed shape for a range of harmonics (Figure 6)." (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+hqual(bot, method = "eFourier", id = 16, harm.range = 1:49,+ palette = col.sari, plot.method = "panel")
+```
+
+#(3.3.2) Through deviations
+
+"The idea is to define, for a given number of sampled points, the best possible fit (i.e., obtained with half this number of points), and to then compare the Euclidean distances obtained with a lower number of harmonics for every point of this outline and the best possible outline with these sampled points (Figure 7). One can for instance choose the minimal number of harmonics that leads to an average deviation of 1 pixel." (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+hquant(bot, harm.range = c(12, 16, 20, 24, 32))
+```
+
+#(3.3.3) Through harmonic power
+
+"Finally, we can also estimate the number of harmonics after examining the spectrum of harmonic Fourier power. The power is proportional to the harmonic amplitude and can be considered as a measure of shape information. As the rank of a harmonic increases, the power decreases and adds less and less information. We can evaluate the number of harmonics that we must select, so their cumulative power gathers 99% of the total cumulative power (Crampton 1995, Figure 8)." (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+hpow(bot)
+```
+
+#(3.4) Computing elliptic Fourier analysis (NOTE: step 8 in Wishkerman 2018 github code)
+
+"Once the right number of harmonics has been determined, elliptic Fourier analysis is performed on the `Coo'-object using the eFourier method and a
+
+  [Number of Outlines] x [4 coefficients x Number of Harmonics]
+  
+matrix is obtained along with grouping factors, individual names, etc. and returned as a `Coe' class object." (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+botF <- eFourier(bot, nb.h = 20)
+botF
+```
+
+#(3.5) Global view
+
+"Before multivariate analysis can be performed, one may be interested in having a global view of the elliptic Fourier analysis: which coefficients vary and what is the geometrical variation they depict (Figure 9)." (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+hcontrib(botF, harm.range = 1:8)
+boxplot(botF)
+```
+
+####(4) Analyzing Fourier coefficients
+
+"Principal component analysis (PCA) and other multivariate approaches can be directly performed on this `Coe' class object (or directly on the matrix stored in the @coe slot) since all of the harmonic coefficients can be considered as quantitative variables." (Bonhomme et al. 2014)
+
+#(4.1) PCA: Principal Component Analysis
+
+"Momocs takes profit of the ade4 package by Dray and Dufour (2007). The pca method can be used on a `Coe' class object and performs a PCA with centering but no rescaling by default. In other words, the small-amplitude coefficients will contribute less than the first coefficients. It returns a `dudi' object to which all suitable ade4 functions can also be applied. (…) See ?dudi.pca for an exhaustive description of this highly tunable function." (Bonhomme et al. 2014)
+
+"Plotting the PCA (Figure 10) is straightforward: below, we first compute elliptical Fourier analysis with 20 harmonics, get out a `dudi' object, and finally plot it." (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+#EFA with 20 harmonics
+botF <- eFourier(bot, nb.h = 20)
+#PCA
+botD <- pca(botF)
+#Make a dudi object...
+dudi.plot(botD, pos.shp = "circle", neighbors = TRUE)
+#...and plot it (NOTE: Perhaps delete the "+" sign and make one row)
+dudi.plot(botD, 1, pch = 20, eigen = TRUE,
++ scale.shp = 0.5, amp.shp = 1.5, rug = FALSE)
+```
+
+#(4.2) Multivariate analysis of variance - MANOVA
+
+"We can test for a difference between subsets of shapes using multivariate analysis of variance (MANOVA), with every harmonic coefficient being considered as an homologous quantitative variable measured for every shape of the dataset. This can be achieved with:" (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+manova.Coe(botF, "type")
+```
+
+#(4.3) Hierarchical clustering
+
+"Momocs also includes a method to perform hierarchical clustering that hinges on dist and hclust for calculation, and phylo.plot from the ape package for graphical output (see Paradis, Claude, and Strimmer 2004 and Paradis 2012). This can be achieved with the code below (Figure 11):" (Bonhomme et al. 2014)
+
+```{r, echo=TRUE}
+clust(botF)
+```
+
+GOOD LUCK!

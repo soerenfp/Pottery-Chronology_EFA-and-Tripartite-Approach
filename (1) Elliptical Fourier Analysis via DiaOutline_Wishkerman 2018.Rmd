@@ -196,11 +196,14 @@ plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.label
 "Both PCA and LDA are linear transformation techniques, and whereas LDA is supervised, PCA is unsupervised." (Wishkerman & Hamilton 2018)
 
 ```{r, echo=TRUE}
+#Linear Discriminant Analysis
+#NOTE: Below "Error in fac_dispatcher(x, fac) : argument "fac" is missing, with no default"
+
 allDiatomOutlines.l <- LDA(allDiatomOutlines.p)
 
-tiff("E:/Fig8AllLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+#tiff("E:/Fig8AllLDA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 plot(allDiatomOutlines.l, chull.filled=TRUE, stars=TRUE, title="All data LDA") #Fig 8 in the paper.
-dev.off()
+#dev.off()
 
 plot(allDiatomOutlines.l, title="All data LDA") #Another plot version
 plot(allDiatomOutlines.l, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE) #Another plot version

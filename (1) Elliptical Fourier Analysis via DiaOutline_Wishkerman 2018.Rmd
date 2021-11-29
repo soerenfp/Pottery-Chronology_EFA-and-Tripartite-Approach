@@ -59,6 +59,9 @@ install.packages("plyr")
 install.packages("grid")
 install.packages("gridExtra")
 install.packages("Momocs")
+
+#Extra
+#install.packages("tidyverse")
 ```
 (2.1.2) ...and load
 ```{r, echo=TRUE}
@@ -72,6 +75,10 @@ library(plyr)
 library(grid)
 library(gridExtra)
 library(Momocs)
+
+#Extra
+
+#library(tidyverse)
 ```
 
 "Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
@@ -84,7 +91,9 @@ NOTE: Somewhere before the start of the analysis I have to smoothen the outlines
 
 #NOTE: The pattern = "\\.txt$" command is not to be changed, and I think it tells that the raw data is in a .txt format
 
-lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Trial traces01", pattern = "\\.txt$", full.names=TRUE)  
+#NOTE: Do not use long folder names
+
+lf <- list.files("C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach/Trial traces01", pattern = "\\.txt$", full.names=TRUE)  
 
 ##########
 
@@ -93,9 +102,10 @@ lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approa
 #split = (...) -> character, the spliting factor used for the file names.
 
 #NOTE: The following split = "C:/(...)" function I believe is again to specify the path to the data.
-#NOTE: Perhaps my problem about "do not know how to turn into a coo" in part 6 below already starts here? Perhaps the path is wrong/to long or some of the .txt files are crooked.
 
-lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Trial traces01", trim.extension = FALSE)
+#NOTE: Perhaps my problem about "do not know how to turn into a coo" in part 6 below already starts here? Perhaps the path is wrong/to long or some of the .txt files are crooked. SOLVED: Two of my traces were crooked -> Deleted the files
+
+lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach/Trial traces01", trim.extension = FALSE)
 
 ##########
 
@@ -125,9 +135,6 @@ allDiatomOutlines <- Out(coordinates, fac = lf2)
 
 #(6) Plot all the outlines, side by side, from a Coo (Out, Opn or Ldk) objects.
 
-#NOTE: New problem below -> "Error in coo_check.default(X[[i]], ...) : do not know how to turn into a coo" -> The problem is that some of the .txt files might be crooked. When I try to run the codes with just my original three trial traces, it works. When I try with the new 20 .txt files this error occurs.
-#=> Problem solved! My trial trace 05.txt file was crooked and removing it solved the problem!
-
 panel(allDiatomOutlines, fac="Type", names=TRUE)
 ```
 
@@ -135,8 +142,6 @@ panel(allDiatomOutlines, fac="Type", names=TRUE)
 ##########
 
 #(7) Stack all the vessel shapes into one coordinate system
-
-#NOTE: stack(allDiatomOutlines) now there is one vessel (trial trace 04) being really large and the rest is pretty small. I need to change that before uploading it to DiaOutline
 
 # stack(allDiatomOutlines)
 stack(coo_center(allDiatomOutlines))
@@ -171,20 +176,25 @@ I changed the allDiatomOutlines.f code above to norm = TRUE. No more warning mes
 allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
 #NOTE: Not totally sure of what is going on below, but I think that it wants to make a .tiff picture/plot. Had some problems, but I inserted the line "C:/Users/Pedersen/Desktop/DiaOutline trial trace" before "Supplement_10AllPCA.tiff" and it seemed to work -> NO, it just made an empty .tiff file in the folder!
+
 #NOTE: Nick said that perhaps I do not need to create a tiff image. I try to leave it out for now.
 
-#tiff("E:/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+#NOTE: I included the tiff image where I specified the path to "C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach" ending with the "/Supplement (...)" line. 
 
-#NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read that this is a specific problem for Windows, and that Apple does not have this issue (https://github.com/MomX/Momocs/issues/212) 
+tiff("C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
-plot(allDiatomOutlines.p, chull.filled = TRUE, stars = TRUE, title="All data PCA") #Supplement 10 in the paper.
+#NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read that this is a specific problem for Windows, and that Apple does not have this issue (https://github.com/MomX/Momocs/issues/212)
 
 #NOTE: I can solve the problem with removing the "1" in the code. I think the "1" is some kind of column ID.
 #Original line plot(allDiatomOutlines.p, 1, chull.filled = TRUE, stars = TRUE, title="All data PCA")
 
-#dev.off()
+plot(allDiatomOutlines.p, chull.filled = TRUE, stars = TRUE, title="All data PCA")
+
+#NOTE: I get the warning "will be deprecated soon, see ?plot_PCA" but it makes a plot of the PCAs
+
+dev.off()
 ```
-Hmm, I do not know if this looks right. It looks like only one vessel is in the plot (trial trace 04). After I removed trial trace 04 it looks better, but I fear it is still just one vessel (trial trace 06 or 07) which is in the plot.
+NOTE: This looks better! Now all my 18 trial traces are included in the plot.
 
 ```{r, echo=TRUE}
 plot(allDiatomOutlines.p,"Type", title="All data PCA")

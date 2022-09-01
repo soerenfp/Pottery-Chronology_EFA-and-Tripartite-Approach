@@ -62,6 +62,7 @@ install.packages("Momocs")
 
 #Extra
 #install.packages("tidyverse")
+#install.packages("RCurl")
 ```
 (2.1.2) ...and load
 ```{r, echo=TRUE}
@@ -79,6 +80,9 @@ library(Momocs)
 #Extra
 
 #library(tidyverse)
+#library(RCurl)
+#library(magrittr)
+library(grDevices)
 ```
 
 "Momocs [75] is an EFA package recently developed for use within the R environment [44]. The functions written within Momocs are primarily derived from Claude’s 2008 book Morphometrics Using R [49]. It encompasses the majority of the analytical process, including outline extraction, EFA, as well as statistical methods such as principal component analysis, MANOVA, and thin plate splines. The utility of calling individual functions within R allows the user to customize the analysis to their needs; however, it also requires a basic knowledge of R programming to navigate." (Caple et al. 2017)
@@ -93,7 +97,7 @@ NOTE: Somewhere before the start of the analysis I have to smoothen the outlines
 
 #NOTE: Do not use long folder names
 
-lf <- list.files("C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach/Trial traces01", pattern = "\\.txt$", full.names=TRUE)  
+lf <- list.files("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Trial traces01", pattern = "\\.txt$", full.names=TRUE)  
 
 ##########
 
@@ -105,7 +109,7 @@ lf <- list.files("C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tri
 
 #NOTE: Perhaps my problem about "do not know how to turn into a coo" in part 6 below already starts here? Perhaps the path is wrong/to long or some of the .txt files are crooked. SOLVED: Two of my traces were crooked -> Deleted the files
 
-lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach/Trial traces01", trim.extension = FALSE)
+lf1 <- lf_structure(lf,  split = "C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Trial traces01", trim.extension = FALSE)
 
 ##########
 
@@ -156,9 +160,13 @@ stack(coo_center(allDiatomOutlines))
 
 #NOTE: For more information about estimating the right amount of harmonics see Bonhomme et al. 2014, p. 12-14
 
-# calibrate_harmonicpower(allDiatomOutlines) 
+calibrate_harmonicpower_efourier(allDiatomOutlines) #Use "calibrate_harmonicpower_efourier()"
 #Estimates the number of harmonics required for the four Fourier methods implemented in Momocs
-allDiatomOutlines.f <- efourier(allDiatomOutlines, norm = TRUE, nb.h=32) #Num. of harmonics set to 32
+```
+Now I have the harmonic power -> I think it is to estimate my "number of harmonics" (nb.h="number of harmonics")
+
+```{r, echo=TRUE}
+allDiatomOutlines.f <- efourier(allDiatomOutlines, norm = FALSE, nb.h=10) #Num. of harmonics set to 32
 ```
 OK, the first part of the outline analysis is fairly done. I got my shapes in a coordinate system (although they are tilted 90° to the left), and the commands seems to be working. The last line (allDiatomOutlines.f) has a warning that -`norm=TRUE` is used and this may be troublesome. See ?efourier-, but when I look at ?efourier then the standard is "norm=TRUE". I don't believe that it is of great importance.
 
@@ -181,23 +189,23 @@ allDiatomOutlines.p <- PCA(allDiatomOutlines.f)
 
 #NOTE: I included the tiff image where I specified the path to "C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach" ending with the "/Supplement (...)" line. 
 
-tiff("C:/Users/Pedersen/Documents/Pottery Chronology_PhD/EFA-and-Tripartite-Approach/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
+#tiff("C:/Users/Pedersen/Pottery-Chronology_EFA-and-Tripartite-Approach/Supplement_10AllPCA.tiff", height = 12, width = 17, units = 'cm', compression = "lzw", res = 500)
 
 #NOTE: Problem comes below; "col.groups" object is not found in the "allDiatomOutlines.p" data. I speculate that it cannot identify which colors to use for the different groups???. -> I read that this is a specific problem for Windows, and that Apple does not have this issue (https://github.com/MomX/Momocs/issues/212)
 
 #NOTE: I can solve the problem with removing the "1" in the code. I think the "1" is some kind of column ID.
 #Original line plot(allDiatomOutlines.p, 1, chull.filled = TRUE, stars = TRUE, title="All data PCA")
 
-plot(allDiatomOutlines.p, chull.filled = TRUE, stars = TRUE, title="All data PCA")
+plot(allDiatomOutlines.p, 1, chull.filled = TRUE, stars = TRUE, title="All data PCA")
 
 #NOTE: I get the warning "will be deprecated soon, see ?plot_PCA" but it makes a plot of the PCAs
 
-dev.off()
+#dev.off()
 ```
 NOTE: This looks better! Now all my 18 trial traces are included in the plot.
 
 ```{r, echo=TRUE}
-plot(allDiatomOutlines.p,"Type", title="All data PCA")
+plot(allDiatomOutlines.p, "Type", title="All data PCA")
 plot(allDiatomOutlines.p, 1, chull=TRUE, pos.shp = "full_axes", abbreviate.labelsgroups = TRUE, points=FALSE, labelspoints = TRUE)
 ```
 
